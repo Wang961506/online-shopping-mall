@@ -145,7 +145,7 @@ public class ProductServiceImpl implements IProductService {
         productListVo.setPrice(product.getPrice());
         productListVo.setStatus(product.getStatus());
         productListVo.setSubtitle(product.getSubtitle());
-        productListVo.setImageHost(PropertiesUtil.getProperty("ftp.server.http.prefix", "http://img.happymmall.com/"));
+        productListVo.setImageHost(PropertiesUtil.getProperty("ftp.server.http.prefix", "http://image.imooc.com/"));
         return productListVo;
     }
 
@@ -183,11 +183,14 @@ public class ProductServiceImpl implements IProductService {
 
     public ServerResponse<PageInfo> getProductByKeywordAndCategoryId(String keyword,Integer categoryId,Integer pageNum,Integer pageSize,String orderby){
         List<Integer> categoryIdList=null;
+        //keyword和categoryId为空的情况下
         if(StringUtils.isBlank(keyword) && categoryId==null) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(), ResponseCode.ILLEGAL_ARGUMENT.getDesc());
         }
+        //categoryId不为空的情况
         if(categoryId!=null){
             Category category = categoryMapper.selectByPrimaryKey(categoryId);
+            //当category为空或者为""的时候
             if(category==null && StringUtils.isBlank(keyword))
             {
                 PageHelper.startPage(pageNum,pageSize);
@@ -195,6 +198,7 @@ public class ProductServiceImpl implements IProductService {
                 PageInfo pageInfo=new PageInfo(productListVoList);
                 return ServerResponse.createBySuccess(pageInfo);
             }
+            //当category有不为空的值的时候，求出其和子产品的id
             categoryIdList = iCategoryService.selectCategoryAndChildrenById(category.getId()).getData();
         }
         if(StringUtils.isNoneBlank(keyword)){
@@ -204,6 +208,7 @@ public class ProductServiceImpl implements IProductService {
         if(StringUtils.isNoneBlank(orderby)){
             if(Const.ProductListOrderBy.PRICE_ASC_DESC.contains(orderby)){
                 String[] splitstr = orderby.split("_");
+                //pageHelper的orderBy方法
                 PageHelper.orderBy(splitstr[0]+" "+splitstr[1]);
 
             }
